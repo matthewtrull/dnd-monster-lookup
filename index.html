@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Monster Lookup - Bring It!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #bringItBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        #bringItBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #bringItBtn:active {
+            transform: translateY(0);
+        }
+
+        #bringItBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #resetBtn {
+            background: #e0e0e0;
+            color: #333;
+            padding: 12px 20px;
+        }
+
+        #resetBtn:hover {
+            background: #d0d0d0;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 0.95em;
+            display: none;
+            margin: 15px 0;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #c33;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border: 2px solid #eee;
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .monster-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .monster-name {
+            font-size: 1.8em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .monster-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            text-align: right;
+        }
+
+        .stat {
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .abilities-section {
+            margin-top: 20px;
+        }
+
+        .abilities-title {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .ability-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 4px solid #764ba2;
+        }
+
+        .ability-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .ability-description {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .monster-header {
+                grid-template-columns: 1fr;
+            }
+
+            .monster-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎲 Bring It!</h1>
+            <p class="subtitle">D&D 5e Monster Lookup</p>
+        </header>
+
+        <div class="error" id="error"></div>
+        <div class="loading" id="loading">⏳ Fetching monster...</div>
+
+        <div class="input-section">
+            <label for="monsterInput">Monster Name:</label>
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="monsterInput" 
+                    placeholder="e.g., Goblin, Dragon, Lich..."
+                    autocomplete="off"
+                >
+                <div class="button-group">
+                    <button id="bringItBtn">Bring It!</button>
+                    <button id="resetBtn">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section" id="results">
+            <div class="monster-header">
+                <div class="monster-name" id="monsterName"></div>
+                <div class="monster-stats" id="monsterStats"></div>
+            </div>
+
+            <div class="abilities-section">
+                <div class="abilities-title">Special Abilities</div>
+                <div id="abilitiesList"></div>
+            </div>
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            Enter a monster name and click "Bring It!" to get started!
+        </div>
+    </div>
+
+    <script>
+        const MCP_API_URL = "https://YOUR_RENDER_URL_HERE"; // Replace with your Render.com URL
+        
+        const monsterInput = document.getElementById('monsterInput');
+        const bringItBtn = document.getElementById('bringItBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const resultsDiv = document.getElementById('results');
+        const loadingDiv = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const noResultsDiv = document.getElementById('noResults');
+
+        // Event listeners
+        bringItBtn.addEventListener('click', fetchMonster);
+        resetBtn.addEventListener('click', reset);
+        monsterInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') fetchMonster();
+        });
+
+        async function fetchMonster() {
+            const monsterName = monsterInput.value.trim();
+
+            if (!monsterName) {
+                showError('Please enter a monster name!');
+                return;
+            }
+
+            clearError();
+            loadingDiv.style.display = 'block';
+            resultsDiv.classList.remove('active');
+            bringItBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${MCP_API_URL}/api/monster/${monsterName}`);
+                
+                if (!response.ok) {
+                    throw new Error('Monster not found!');
+                }
+
+                const monster = await response.json();
+                displayMonster(monster);
+            } catch (error) {
+                showError(error.message || 'Failed to fetch monster. Check server URL.');
+            } finally {
+                loadingDiv.style.display = 'none';
+                bringItBtn.disabled = false;
+            }
+        }
+
+        function displayMonster(monster) {
+            // Name
+            document.getElementById('monsterName').textContent = monster.name;
+
+            // Stats grid
+            const statsHtml = `
+                <div class="stat">
+                    <div class="stat-label">CR</div>
+                    <div class="stat-value">${monster.cr}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">AC</div>
+                    <div class="stat-value">${monster.ac}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">HP</div>
+                    <div class="stat-value">${monster.hp}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Type</div>
+                    <div class="stat-value">${monster.type}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Size</div>
+                    <div class="stat-value">${monster.size || 'N/A'}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Alignment</div>
+                    <div class="stat-value">${monster.alignment || 'N/A'}</div>
+                </div>
+            `;
+            document.getElementById('monsterStats').innerHTML = statsHtml;
+
+            // Abilities
+            const abilitiesHtml = monster.special_abilities_count > 0
+                ? `<div class="ability-item"><div class="ability-name">Special Abilities</div><div class="ability-description">${monster.special_abilities_count} abilities available</div></div>`
+                : '<div class="no-results">No special abilities</div>';
+            
+            document.getElementById('abilitiesList').innerHTML = abilitiesHtml;
+
+            // Show results
+            resultsDiv.classList.add('active');
+            noResultsDiv.style.display = 'none';
+        }
+
+        function reset() {
+            monsterInput.value = '';
+            resultsDiv.classList.remove('active');
+            noResultsDiv.style.display = 'block';
+            clearError();
+            monsterInput.focus();
+        }
+
+        function showError(message) {
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.style.display = 'block';
+        }
+
+        function clearError() {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+
+        // Focus on input on load
+        window.addEventListener('load', () => {
+            monsterInput.focus();
+            noResultsDiv.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
