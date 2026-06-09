@@ -308,121 +308,119 @@
     </div>
 
     <script>
-        const MCP_API_URL = "https://dnd-monster-lookup.onrender.com"; // Replace with your Render.com URL
-        
-        const monsterInput = document.getElementById('monsterInput');
-        const bringItBtn = document.getElementById('bringItBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const resultsDiv = document.getElementById('results');
-        const loadingDiv = document.getElementById('loading');
-        const errorDiv = document.getElementById('error');
-        const noResultsDiv = document.getElementById('noResults');
+ const MCP_API_URL = "https://YOUR_RENDER_URL_HERE"; // Replace with your Render.com URL
+ const monsterInput = document.getElementById('monsterInput');
+ const bringItBtn = document.getElementById('bringItBtn');
+ const resetBtn = document.getElementById('resetBtn');
+ const resultsDiv = document.getElementById('results');
+ const loadingDiv = document.getElementById('loading');
+ const errorDiv = document.getElementById('error');
+ const noResultsDiv = document.getElementById('noResults');
 
-        // Event listeners
-        bringItBtn.addEventListener('click', fetchMonster);
-        resetBtn.addEventListener('click', reset);
-        monsterInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') fetchMonster();
-        });
+ // Event listeners
+ bringItBtn.addEventListener('click', fetchMonster);
+ resetBtn.addEventListener('click', reset);
+ monsterInput.addEventListener('keypress', (e) => {
+ if (e.key === 'Enter') fetchMonster();
+ });
 
-        async function fetchMonster() {
-            const monsterName = monsterInput.value.trim();
+ async function fetchMonster() {
+ const monsterName = monsterInput.value.trim();
+ if (!monsterName) {
+ showError('Please enter a monster name!');
+ return;
+ }
 
-            if (!monsterName) {
-                showError('Please enter a monster name!');
-                return;
-            }
+ // NEW: Instantly wake up the MCP server without waiting for it to reply
+ fetch(`${MCP_API_URL}/api/wakeup`).catch(() => {
+ // Silently ignore errors if the wake-up endpoint isn't fully configured yet
+ });
 
-            clearError();
-            loadingDiv.style.display = 'block';
-            resultsDiv.classList.remove('active');
-            bringItBtn.disabled = true;
+ clearError();
+ loadingDiv.style.display = 'block';
+ resultsDiv.classList.remove('active');
+ bringItBtn.disabled = true;
 
-            try {
-                const response = await fetch(`${MCP_API_URL}/api/monster/${monsterName}`);
-                
-                if (!response.ok) {
-                    throw new Error('Monster not found!');
-                }
+ try {
+ const response = await fetch(`${MCP_API_URL}/api/monster/${monsterName}`);
+ if (!response.ok) {
+ throw new Error('Monster not found!');
+ }
+ const monster = await response.json();
+ displayMonster(monster);
+ } catch (error) {
+ showError(error.message || 'Failed to fetch monster. Check server URL.');
+ } finally {
+ loadingDiv.style.display = 'none';
+ bringItBtn.disabled = false;
+ }
+ }
 
-                const monster = await response.json();
-                displayMonster(monster);
-            } catch (error) {
-                showError(error.message || 'Failed to fetch monster. Check server URL.');
-            } finally {
-                loadingDiv.style.display = 'none';
-                bringItBtn.disabled = false;
-            }
-        }
+ function displayMonster(monster) {
+ // Name
+ document.getElementById('monsterName').textContent = monster.name;
 
-        function displayMonster(monster) {
-            // Name
-            document.getElementById('monsterName').textContent = monster.name;
+ // Stats grid
+ const statsHtml = `
+ <div class="stat">
+ <div class="stat-label">CR</div>
+ <div class="stat-value">${monster.cr}</div>
+ </div>
+ <div class="stat">
+ <div class="stat-label">AC</div>
+ <div class="stat-value">${monster.ac}</div>
+ </div>
+ <div class="stat">
+ <div class="stat-label">HP</div>
+ <div class="stat-value">${monster.hp}</div>
+ </div>
+ <div class="stat">
+ <div class="stat-label">Type</div>
+ <div class="stat-value">${monster.type}</div>
+ </div>
+ <div class="stat">
+ <div class="stat-label">Size</div>
+ <div class="stat-value">${monster.size || 'N/A'}</div>
+ </div>
+ <div class="stat">
+ <div class="stat-label">Alignment</div>
+ <div class="stat-value">${monster.alignment || 'N/A'}</div>
+ </div>
+ `;
+ document.getElementById('monsterStats').innerHTML = statsHtml;
 
-            // Stats grid
-            const statsHtml = `
-                <div class="stat">
-                    <div class="stat-label">CR</div>
-                    <div class="stat-value">${monster.cr}</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">AC</div>
-                    <div class="stat-value">${monster.ac}</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">HP</div>
-                    <div class="stat-value">${monster.hp}</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Type</div>
-                    <div class="stat-value">${monster.type}</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Size</div>
-                    <div class="stat-value">${monster.size || 'N/A'}</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Alignment</div>
-                    <div class="stat-value">${monster.alignment || 'N/A'}</div>
-                </div>
-            `;
-            document.getElementById('monsterStats').innerHTML = statsHtml;
+ // Abilities
+ const abilitiesHtml = monster.special_abilities_count > 0 ? `<div class="ability-item"><div class="ability-name">Special Abilities</div><div class="ability-description">${monster.special_abilities_count} abilities available</div></div>` : '<div class="no-results">No special abilities</div>';
+ document.getElementById('abilitiesList').innerHTML = abilitiesHtml;
 
-            // Abilities
-            const abilitiesHtml = monster.special_abilities_count > 0
-                ? `<div class="ability-item"><div class="ability-name">Special Abilities</div><div class="ability-description">${monster.special_abilities_count} abilities available</div></div>`
-                : '<div class="no-results">No special abilities</div>';
-            
-            document.getElementById('abilitiesList').innerHTML = abilitiesHtml;
+ // Show results
+ resultsDiv.classList.add('active');
+ noResultsDiv.style.display = 'none';
+ }
 
-            // Show results
-            resultsDiv.classList.add('active');
-            noResultsDiv.style.display = 'none';
-        }
+ function reset() {
+ monsterInput.value = '';
+ resultsDiv.classList.remove('active');
+ noResultsDiv.style.display = 'block';
+ clearError();
+ monsterInput.focus();
+ }
 
-        function reset() {
-            monsterInput.value = '';
-            resultsDiv.classList.remove('active');
-            noResultsDiv.style.display = 'block';
-            clearError();
-            monsterInput.focus();
-        }
+ function showError(message) {
+ errorDiv.textContent = '❌ ' + message;
+ errorDiv.style.display = 'block';
+ }
 
-        function showError(message) {
-            errorDiv.textContent = '❌ ' + message;
-            errorDiv.style.display = 'block';
-        }
+ function clearError() {
+ errorDiv.style.display = 'none';
+ errorDiv.textContent = '';
+ }
 
-        function clearError() {
-            errorDiv.style.display = 'none';
-            errorDiv.textContent = '';
-        }
-
-        // Focus on input on load
-        window.addEventListener('load', () => {
-            monsterInput.focus();
-            noResultsDiv.style.display = 'block';
-        });
-    </script>
+ // Focus on input on load
+ window.addEventListener('load', () => {
+ monsterInput.focus();
+ noResultsDiv.style.display = 'block';
+ });
+</script>
 </body>
 </html>
