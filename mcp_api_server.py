@@ -12,7 +12,9 @@ from monster_cr_adjuster import (
 )
 
 app = Flask(__name__)
-
+@app.route('/api/wakeup', methods=['GET'])
+def wakeup():
+    return {"status": "ready", "message": "Server is awake!"}, 200
 @app.route('/', methods=['GET'])
 def index():
     """API documentation."""
@@ -33,7 +35,9 @@ def index():
             "str_mod": 2
         }
     })
-
+@app.route('/api/wakeup', methods=['GET'])
+def wakeup():
+    return {"status": "ready", "message": "Server is awake!"}, 200
 @app.route('/api/monsters', methods=['GET'])
 def list_monsters():
     """List all monsters with optional search."""
